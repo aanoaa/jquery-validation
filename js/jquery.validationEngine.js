@@ -225,16 +225,18 @@
             var form = $(this);
  			var options = form.data('jqv');
 
+            if (options.ajaxFormValidationOnly) {
+                options.showArrow = options.ajaxFormValidationOnlyArrow !== undefined ?
+                    options.ajaxFormValidationOnlyArrow : true;
+                methods._validateFormWithAjaxOnly(form, options);
+                return false;
+            }
+
 			// validate each field (- skip field ajax validation, no necessary since we will perform an ajax form validation)
             var r=methods._validateFields(form, true);
 		
             if (r && options.ajaxFormValidation) {
                 methods._validateFormWithAjax(form, options);
-                return false;
-            }
-
-            if (r && options.ajaxFormValidationOnly) {
-                methods._validateFormWithAjaxOnly(form, options);
                 return false;
             }
 
@@ -426,7 +428,7 @@
          */
         _validateFormWithAjaxOnly: function(form, options) {
             var data = form.serialize();
-			var url = form.attr("action");
+            var url = form.attr("action");
             $.ajax({
                 type: "POST",
                 url: url,
@@ -443,16 +445,14 @@
                     methods._ajaxError(data, transport);
                 },
                 success: function(json) {
-                    if ($.isEmptyObject(json)) {
-                        options.onAjaxFormComplete(true, form, "", options);
-                    } else {
+                    if (!$.isEmptyObject(json)) {
                         $.each(json, function(name, messages) {
                             options.ajaxValidCache[name] = false;
                             options.isError = true;
                             methods._showPrompt($('input[name=' + name + ']'), messages[0], "", true, options);
                         });
-
-                        options.onAjaxFormComplete(false, form, "", options);
+                    } else {
+                        form.unbind('submit').submit();
                     }
                 }
             });
@@ -1112,17 +1112,15 @@
                     },
                     success: function(json) {
                         if (!$.isEmptyObject(json)) {
-                            var is_valid = true;
                             $.each(json, function(name, messages) {
                                 if (field.attr('name') == name) {
                                     options.ajaxValidCache[name] = false;
                                     options.isError = true;
                                     methods._showPrompt($('input[name=' + name + ']'), messages[0], "", true, options);
-                                    is_valid = false;
                                 }
                             });
 
-                            if (is_valid) {
+                            if (!options.isError) {
                                 var errorFieldId = field.attr('name');
                                 if (options.ajaxValidCache[errorFieldId] !== undefined) {
                                     options.ajaxValidCache[errorFieldId] = true;
@@ -1130,9 +1128,9 @@
                                 methods._closePrompt(field);
                             }
                         } else {
-                            methods._closePrompt(field);
+                            methods.hideAll();
+                            // methods._closePrompt(field);
                         }
-
                     }
                 });
             }

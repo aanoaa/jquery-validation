@@ -90,8 +90,8 @@
 
                 // unbind form.submit
                 form.unbind("submit", methods.onAjaxFormComplete);
-                
-               
+
+
                 // unbind live fields (kill)
                 form.find("[class*=validate]").not("[type=checkbox]").die(options.validationEventTrigger, methods._onFieldEvent);
                 form.find("[class*=validate][type=checkbox]").die("click", methods._onFieldEvent);
@@ -101,7 +101,7 @@
 
 
                 form.die("submit", methods.onAjaxFormComplete);
-                
+
                 form.removeData('jqv');
             }
         },
@@ -212,7 +212,7 @@
 			window.setTimeout(function() {
 			    methods._validateField(field, options);
 			}, (event.data) ? event.data.delay : 0);
-            
+
         },
         /**
          * Called when the form is submited, shows prompts accordingly
@@ -224,12 +224,17 @@
         _onSubmitEvent: function() {
             var form = $(this);
  			var options = form.data('jqv');
-   
+
 			// validate each field (- skip field ajax validation, no necessary since we will perform an ajax form validation)
             var r=methods._validateFields(form, true);
 		
             if (r && options.ajaxFormValidation) {
                 methods._validateFormWithAjax(form, options);
+                return false;
+            }
+
+            if (r && options.ajaxFormValidationOnly) {
+                methods._validateFormWithAjaxOnly(form, options);
                 return false;
             }
 
@@ -413,6 +418,46 @@
 
         },
         /**
+         * This method is called to perform an ajax form validation.
+         * During this process all the (field, value) pairs are sent to the server which returns a list of invalid fields or true
+         *
+         * @param {jqObject} form
+         * @param {Map} options
+         */
+        _validateFormWithAjaxOnly: function(form, options) {
+            var data = form.serialize();
+			var url = form.attr("action");
+            $.ajax({
+                type: "POST",
+                url: url,
+                cache: false,
+                dataType: "json",
+                data: data,
+                form: form,
+                methods: methods,
+                options: options,
+                beforeSend: function() {
+                    return options.onBeforeAjaxFormValidation(form, options);
+                },
+                error: function(data, transport) {
+                    methods._ajaxError(data, transport);
+                },
+                success: function(json) {
+                    if ($.isEmptyObject(json)) {
+                        options.onAjaxFormComplete(true, form, "", options);
+                    } else {
+                        $.each(json, function(name, messages) {
+                            options.ajaxValidCache[name] = false;
+                            options.isError = true;
+                            methods._showPrompt($('input[name=' + name + ']'), messages[0], "", true, options);
+                        });
+
+                        options.onAjaxFormComplete(false, form, "", options);
+                    }
+                }
+            });
+        },
+        /**
          * Validates field, shows prompts accordingly
          *
          * @param {jqObject}
@@ -476,6 +521,13 @@
 	                        isAjaxValidator = true;
 						}
                         break;
+                    case "ajaxonly":
+                        // ajax has its own prompts handling technique
+						if(!skipAjaxValidation){
+							methods._ajaxonly(field, rules, i, options);
+	                        isAjaxValidator = true;
+						}
+                        break;
                     case "minSize":
                         errorMsg = methods._minSize(field, rules, i, options);
                         break;
@@ -530,7 +582,7 @@
             // If the rules required is not added, an empty field is not validated
             if(!required){
             	if(field.val() == "") options.isError = false;
-            }			
+            }
 			
             // Hack for radio/checkbox group button, the validation go into the
             // first radio/checkbox of the group
@@ -927,8 +979,6 @@
          * @return nothing! the ajax validator handles the prompts itself
          */
         _ajax: function(field, rules, i, options) {
-			
-			
             var errorSelector = rules[i + 1];
             var rule = options.allrules[errorSelector];
             var extraData = rule.extraData;
@@ -950,9 +1000,9 @@
               }
               extraDataDynamic = tmpData.join("&");
             } else {
-              extraDataDynamic = "";              
+              extraDataDynamic = "";
             }
-                                
+
             if (!options.isError) {
                 $.ajax({
                     type: "GET",
@@ -998,7 +1048,7 @@
 								}
 								else
                                     msg = rule.alertText;
-                                
+
 								methods._showPrompt(errorField, msg, "", true, options);
                             } else {
                                 if (options.ajaxValidCache[errorFieldId] !== undefined)
@@ -1013,7 +1063,7 @@
 							        }
 								}
 								else
-							       	msg = rule.alertTextOk;                                
+							       	msg = rule.alertTextOk;
 
 								// see if we should display a green prompt
                                 if (msg)
@@ -1022,6 +1072,67 @@
                                     methods._closePrompt(errorField);
                             }
                         }
+                    }
+                });
+            }
+        },
+        /**
+         * Ajaxonly field validation
+         *
+         * @param {jqObject} field
+         * @param {Array[String]} rules
+         * @param {int} i rules index
+         * @param {Map}
+         *            user options
+         * @return nothing! the ajax validator handles the prompts itself
+         */
+        _ajaxonly: function(field, rules, i, options) {
+            var errorSelector = rules[i + 1];
+            var rule = options.allrules[errorSelector];
+            if (!options.isError) {
+                $.ajax({
+                    type: "POST",
+                    url: field.closest("form").attr("action"),
+                    cache: false,
+                    dataType: "json",
+                    data: field.closest("form").serialize(),
+                    field: field,
+                    rule: rule,
+                    methods: methods,
+                    options: options,
+                    beforeSend: function() {
+                        // build the loading prompt
+                        var loadingText = rule.alertTextLoad;
+                        if (loadingText) {
+                            methods._showPrompt(field, loadingText, "load", true, options);
+                        }
+                    },
+                    error: function(data, transport) {
+                        methods._ajaxError(data, transport);
+                    },
+                    success: function(json) {
+                        if (!$.isEmptyObject(json)) {
+                            var is_valid = true;
+                            $.each(json, function(name, messages) {
+                                if (field.attr('name') == name) {
+                                    options.ajaxValidCache[name] = false;
+                                    options.isError = true;
+                                    methods._showPrompt($('input[name=' + name + ']'), messages[0], "", true, options);
+                                    is_valid = false;
+                                }
+                            });
+
+                            if (is_valid) {
+                                var errorFieldId = field.attr('name');
+                                if (options.ajaxValidCache[errorFieldId] !== undefined) {
+                                    options.ajaxValidCache[errorFieldId] = true;
+                                }
+                                methods._closePrompt(field);
+                            }
+                        } else {
+                            methods._closePrompt(field);
+                        }
+
                     }
                 });
             }
@@ -1308,7 +1419,7 @@
             form.data('jqv', userOptions);
             return userOptions;
         },
-        
+
         /**
          * Removes forbidden characters from class name
          * @param {String} className
@@ -1331,11 +1442,11 @@
 
         var form = $(this);
 		  if(!form[0]) return false;  // stop here if the form does not exist
-		  
+		
         if (typeof(method) == 'string' && method.charAt(0) != '_' && methods[method]) {
 
             // make sure init is called once
-            if(method != "showPrompt" && method != "hidePrompt" && method != "hide" && method != "hideAll") 
+            if(method != "showPrompt" && method != "hidePrompt" && method != "hide" && method != "hideAll")
             	methods.init.apply(form);
 
             return methods[method].apply(form, Array.prototype.slice.call(arguments, 1));

@@ -192,7 +192,7 @@ Options are typically passed to the init action as a parameter.
 
 ### validationEventTrigger
 Name of the event triggering field validation, defaults to *blur*.
-                
+
 ### scroll
 Tells if we should scroll the page to the first error, defaults to *true*.
 
@@ -203,14 +203,29 @@ Where should the prompt show ? Possible values are "topLeft", "topRight", "botto
 If set to true, turns Ajax form validation logic on. defaults to *false*.
 form validation takes place when the validate() action is called or when the form is submitted.
 
+### ajaxFormValidationOnly
+If set to true, turns Ajax only form validation logic on. defaults to *false*.
+form validation takes place when the validate() action is called or when the form is submitted.
+
+FIXME: to english
+
+아오 한글 써야징..
+모든 validation 은 서버에서 처리.
+서버 구현에 의존적임.
+폼에 class 속성으로 선언되는 룰이 단순해짐
+
+    ex: <input type="name" id="name" class="validate[ajaxonly[foo]]" type="text" />
+
+ajaxonly|foo| 서버의 룰에 따라 required, formatting등에 대한 에러 검사후에 해당사항 없으면 pass, 아니면 error
+
 ### ajaxFormValidationURL
 If set, the  ajax submit validation will use this url instead of the form action
 
 ### onBeforeAjaxFormValidation(form, options)
 When ajaxFormValidation is turned on, function called before the asynchronous AJAX form validation call. May return false to stop the Ajax form validation
-            
+
 ### onAjaxFormComplete: function(form, status, errors, options)
-When ajaxFormValidation is turned on, function is used to asynchronously process the result of the validation.
+When ajaxFormValidation, ajaxFormValidationOnly is turned on, function is used to asynchronously process the result of the validation.
 
 ### isOverflown
 Set to true when the form shows in a scrolling div, defaults to *false*.

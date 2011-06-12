@@ -445,8 +445,8 @@
                     methods._ajaxError(data, transport);
                 },
                 success: function(json) {
-                    if (!$.isEmptyObject(json)) {
-                        $.each(json, function(name, messages) {
+                    if (!$.isEmptyObject(json.errors)) {
+                        $.each(json.errors, function(name, messages) {
                             options.ajaxValidCache[name] = false;
                             options.isError = true;
                             methods._showPrompt($('input[name=' + name + ']'), messages[0], "", true, options);
@@ -1111,8 +1111,8 @@
                         methods._ajaxError(data, transport);
                     },
                     success: function(json) {
-                        if (!$.isEmptyObject(json)) {
-                            $.each(json, function(name, messages) {
+                        if (!$.isEmptyObject(json.errors)) {
+                            $.each(json.errors, function(name, messages) {
                                 if (field.attr('name') == name) {
                                     options.ajaxValidCache[name] = false;
                                     options.isError = true;
@@ -1129,7 +1129,6 @@
                             }
                         } else {
                             methods.hideAll();
-                            // methods._closePrompt(field);
                         }
                     }
                 });

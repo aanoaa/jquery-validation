@@ -1086,10 +1086,14 @@
          *            user options
          * @return nothing! the ajax validator handles the prompts itself
          */
+
         _ajaxonly: function(field, rules, i, options) {
             var errorSelector = rules[i + 1];
             var rule = options.allrules[errorSelector];
             if (!options.isError) {
+
+                options.onBeforeAjaxOnlyFormValidation(field, options);
+
                 $.ajax({
                     type: "POST",
                     url: field.closest("form").attr("action"),
@@ -1478,6 +1482,8 @@
         onAjaxFormComplete: $.noop,
         // called right before the ajax call, may return false to cancel
         onBeforeAjaxFormValidation: $.noop,
+        // Stops form from submitting and execute function assiciated with it
+        onBeforeAjaxOnlyFormValidation: $.noop,
         // Stops form from submitting and execute function assiciated with it
         onValidationComplete: false,
 

@@ -1,0 +1,41 @@
+div.validation {
+  position: absolute;
+  background: none repeat scroll 0 0 #EE0101;
+  border: 2px solid #DDDDDD;
+
+  border-radius: 6px 6px 6px 6px;
+  box-shadow: 0 0 6px #000000;
+  color: #FFFFFF;
+  font-family: tahoma;
+  font-size: 11px;
+  padding: 4px 10px;
+  min-width: 150px;
+  z-index: 100;
+  cursor: pointer;
+}
+
+div.validation > p {
+  margin: 0;
+  padding: 0;
+  height: 1.3em;
+  overflow: hidden;
+}
+
+div.validation:after {
+  content: ' ';
+  height: 0;
+  position: absolute;
+  width: 0;
+  border: 10px solid transparent;
+  border-top-color: #EE0101;
+  top: 100%;
+  left: 10px;
+}
+
+div.validation.validating {
+  background-color: gray;
+}
+
+div.validation.validating:after {
+  border-top-color: gray;
+}

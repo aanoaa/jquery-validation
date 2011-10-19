@@ -51,12 +51,21 @@
           return self.validateAll(this, opts);
         });
       });
+    },
+    jvclear: function() {
+      return $('body > div.validation').each(function(i, el) {
+        return $(el).fadeOut(function() {
+          return $(this).remove();
+        });
+      });
     }
   });
   $.extend($.fn.validation, {
     default_options: {
-      log: true,
-      debug: true,
+      log: false,
+      debug: false,
+      validateUrl: window.location.href.split('#')[0],
+      validateAllUrl: window.location.href.split('#')[0],
       html: '<div class="validation" style="display:none;">\n  <p></p>\n</div>'
     },
     init: function(el, opts) {
@@ -69,7 +78,6 @@
       return console.log(msg);
     },
     clear: function() {
-      this.log('clear');
       return $('body > div.validation').each(function(i, el) {
         return $(el).fadeOut(function() {
           return $(this).remove();

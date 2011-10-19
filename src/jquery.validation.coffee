@@ -31,6 +31,7 @@ $.fn.extend
   validation: (options) ->
     self = $.fn.validation
     opts = $.extend {}, self.default_options, options
+
     $(this).each (i, el) ->
       self.init el, opts
       $.each $(el).find(':text,textarea,:password'), (j, input) ->
@@ -42,10 +43,17 @@ $.fn.extend
         e.preventDefault()
         self.validateAll @, opts
 
+  jvclear: ->
+    $('body > div.validation').each (i, el) ->
+      $(el).fadeOut ->
+        $(this).remove()
+
 $.extend $.fn.validation,
   default_options:
-    log: on
-    debug: on
+    log: off
+    debug: off
+    validateUrl: window.location.href.split('#')[0]
+    validateAllUrl: window.location.href.split('#')[0]
     html: '''
       <div class="validation" style="display:none;">
         <p></p>
@@ -59,7 +67,6 @@ $.extend $.fn.validation,
     console.log msg
 
   clear: ->
-    @log 'clear'
     $('body > div.validation').each (i, el) ->
       $(el).fadeOut ->
         $(this).remove()

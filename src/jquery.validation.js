@@ -34,11 +34,10 @@
       return objectData;
     },
     validation: function(options) {
-      var self;
+      var opts, self;
       self = $.fn.validation;
+      opts = $.extend({}, self.default_options, options);
       return $(this).each(function(i, el) {
-        var opts;
-        opts = $.extend({}, self.default_options, options);
         self.init(el, opts);
         $.each($(el).find(':text,textarea,:password'), function(j, input) {
           if ($(input).attr('type') !== 'submit') {
@@ -88,7 +87,7 @@
         type: 'POST',
         data: $(el).serializeObject(),
         dataType: 'json',
-        url: '/fail.json',
+        url: opts.validateUrl,
         cache: false,
         beforeSend: function(jqXHR, settings) {
           if (!($("body > div.validation[title=" + _name + "]").length > 0)) {
@@ -106,14 +105,12 @@
           return $(document).trigger('beforeSend.validation', el);
         },
         success: function(data, textStatus, jqXHR) {
-          if ($.isEmptyObject(data)) {
+          if ($.isEmptyObject(data) || !(data[_name] != null)) {
             $("body > div.validation[title=" + _name + "]").fadeOut(function() {
               return $(this).remove();
             });
           } else {
-            $.each(data, function(key, value) {
-              return $("body > div.validation[title=" + key + "]").removeClass('validating').children('p').html(value);
-            });
+            $("body > div.validation[title=" + _name + "]").removeClass('validating').children('p').html(data[_name]);
           }
           return $(document).trigger('afterSuccess.validation', el);
         },
@@ -126,21 +123,26 @@
         type: 'POST',
         data: $(el).serialize(),
         dataType: 'json',
-        url: '/success.json',
+        url: opts.validateAllUrl,
         cache: false,
         beforeSend: function(jqXHR, settings) {
           return $(document).trigger('beforeSend.validation', el);
         },
         success: function(data, textStatus, jqXHR) {
+          var scrollTop;
           if ($.isEmptyObject(data)) {
             $(el).unbind('submit.validation').submit();
           } else {
+            scrollTop = 0;
             $.each(data, function(key, value) {
               var offset;
               offset = $("input[name=" + key + "],textarea[name=" + key + "]").offset();
               offset.left += $("input[name=" + key + "],textarea[name=" + key + "]").width();
               offset.top -= 35;
               offset.left -= 35;
+              if (!scrollTop) {
+                scrollTop = offset.top;
+              }
               return $(opts.html).attr('title', key).children('p').html(value).parent().click(function() {
                 return $(this).fadeOut(function() {
                   return $(this).remove();
@@ -150,6 +152,11 @@
                 top: offset.top
               }).fadeIn().appendTo('body');
             });
+          }
+          if (scrollTop !== 0) {
+            $("html:not(:animated),body:not(:animated)").animate({
+              scrollTop: scrollTop
+            }, 1100);
           }
           return $(document).trigger('afterSuccess.validation', el);
         },

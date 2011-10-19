@@ -7,6 +7,7 @@ $.fn.extend
       .get().join(',')
     else
       val = @val()
+
   serializeObject: ->
     arrayData = this.serializeArray()
     objectData = {}
@@ -26,10 +27,11 @@ $.fn.extend
         objectData[this.name] = value
 
     return objectData
+
   validation: (options) ->
     self = $.fn.validation
+    opts = $.extend {}, self.default_options, options
     $(this).each (i, el) ->
-      opts = $.extend {}, self.default_options, options
       self.init el, opts
       $.each $(el).find(':text,textarea,:password'), (j, input) ->
         unless $(input).attr('type') is 'submit'
@@ -75,7 +77,7 @@ $.extend $.fn.validation,
       type: 'POST'
       data: $(el).serializeObject()
       dataType: 'json'
-      url: '/fail.json'
+      url: opts.validateUrl
       cache: false
       beforeSend: (jqXHR, settings) ->
         unless $("body > div.validation[title=#{_name}]").length > 0
@@ -94,12 +96,11 @@ $.extend $.fn.validation,
 
         $(document).trigger 'beforeSend.validation', el
       success: (data, textStatus, jqXHR) ->
-        if $.isEmptyObject(data)
+        if $.isEmptyObject(data) or !data[_name]?
           $("body > div.validation[title=#{_name}]").fadeOut ->
             $(this).remove()
         else
-          $.each data, (key, value) ->
-            $("body > div.validation[title=#{key}]").removeClass('validating').children('p').html(value)
+          $("body > div.validation[title=#{_name}]").removeClass('validating').children('p').html(data[_name])
 
         $(document).trigger 'afterSuccess.validation', el
       complete: (jqXHR, textStatus) ->
@@ -111,8 +112,7 @@ $.extend $.fn.validation,
       type: 'POST'
       data: $(el).serialize()
       dataType: 'json'
-      # url: '/multiple.json'
-      url: '/success.json'
+      url: opts.validateAllUrl
       cache: false
       beforeSend: (jqXHR, settings) ->
         $(document).trigger 'beforeSend.validation', el
@@ -120,11 +120,13 @@ $.extend $.fn.validation,
         if $.isEmptyObject(data)
           $(el).unbind('submit.validation').submit()
         else
+          scrollTop = 0
           $.each data, (key, value) ->
             offset = $("input[name=#{key}],textarea[name=#{key}]").offset()
             offset.left += $("input[name=#{key}],textarea[name=#{key}]").width()
             offset.top -= 35
             offset.left -= 35
+            scrollTop = offset.top unless scrollTop
 
             $(opts.html).attr('title', key).children('p').html(value).parent()
               .click ->
@@ -136,6 +138,7 @@ $.extend $.fn.validation,
               .fadeIn()
               .appendTo('body')
 
+        $("html:not(:animated),body:not(:animated)").animate { scrollTop: scrollTop }, 1100 unless scrollTop is 0
         $(document).trigger 'afterSuccess.validation', el
       complete: (jqXHR, textStatus) ->
         # do something

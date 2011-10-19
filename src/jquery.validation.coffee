@@ -73,6 +73,8 @@ $.extend $.fn.validation,
 
     _name = $(el).attr('name')
 
+    $(document).trigger 'beforeValidate.validation', el
+
     $.ajax
       type: 'POST'
       data: $(el).serializeObject()
@@ -95,6 +97,7 @@ $.extend $.fn.validation,
           $("body > div.validation[title=#{_name}]").addClass('validating')
 
         $(document).trigger 'beforeSend.validation', el
+
       success: (data, textStatus, jqXHR) ->
         if $.isEmptyObject(data) or !data[_name]?
           $("body > div.validation[title=#{_name}]").fadeOut ->
@@ -103,6 +106,7 @@ $.extend $.fn.validation,
           $("body > div.validation[title=#{_name}]").removeClass('validating').children('p').html(data[_name])
 
         $(document).trigger 'afterSuccess.validation', el
+
       complete: (jqXHR, textStatus) ->
         # do something
 

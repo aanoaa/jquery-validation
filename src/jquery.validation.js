@@ -83,6 +83,7 @@
       offset.top -= 35;
       offset.left -= 35;
       _name = $(el).attr('name');
+      $(document).trigger('beforeValidate.validation', el);
       return $.ajax({
         type: 'POST',
         data: $(el).serializeObject(),

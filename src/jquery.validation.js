@@ -1,4 +1,4 @@
-(function() {
+
   $.fn.extend({
     vals: function() {
       var name, val;
@@ -60,6 +60,7 @@
       });
     }
   });
+
   $.extend($.fn.validation, {
     default_options: {
       log: false,
@@ -140,6 +141,7 @@
         success: function(data, textStatus, jqXHR) {
           var scrollTop;
           if ($.isEmptyObject(data)) {
+            $(document).trigger('beforeSubmit.validation', el);
             $(el).unbind('submit.validation').submit();
           } else {
             scrollTop = 0;
@@ -149,9 +151,7 @@
               offset.left += $("input[name=" + key + "],textarea[name=" + key + "]").width();
               offset.top -= 35;
               offset.left -= 35;
-              if (!scrollTop) {
-                scrollTop = offset.top;
-              }
+              if (!scrollTop) scrollTop = offset.top;
               return $(opts.html).attr('title', key).children('p').html(value).parent().click(function() {
                 return $(this).fadeOut(function() {
                   return $(this).remove();
@@ -173,4 +173,3 @@
       });
     }
   });
-}).call(this);

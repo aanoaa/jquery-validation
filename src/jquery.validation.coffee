@@ -129,6 +129,7 @@ $.extend $.fn.validation,
         $(document).trigger 'beforeSend.validation', el
       success: (data, textStatus, jqXHR) ->
         if $.isEmptyObject(data)
+          $(document).trigger 'beforeSubmit.validation', el
           $(el).unbind('submit.validation').submit()
         else
           scrollTop = 0

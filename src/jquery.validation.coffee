@@ -135,6 +135,7 @@ $.extend $.fn.validation,
           scrollTop = 0
           $.each data, (key, value) ->
             offset = $("input[name=#{key}],textarea[name=#{key}]").offset()
+            return true unless offset
             offset.left += $("input[name=#{key}],textarea[name=#{key}]").width()
             offset.top -= 35
             offset.left -= 35

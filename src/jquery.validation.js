@@ -150,6 +150,9 @@
             $.each(data, function(key, value) {
               var offset;
               offset = $("input[name=" + key + "],textarea[name=" + key + "]").offset();
+              if (!offset) {
+                return true;
+              }
               offset.left += $("input[name=" + key + "],textarea[name=" + key + "]").width();
               offset.top -= 35;
               offset.left -= 35;
